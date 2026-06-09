@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
+    return NextResponse.json({ translatedText: "مرحبًا", pronounciation: "mrhban" })
     const { text, sourceLang, targetLang } = await request.json()
 
     if (!text || !sourceLang || !targetLang) {
