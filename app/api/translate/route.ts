@@ -44,7 +44,19 @@ export async function POST(request: NextRequest) {
     const data = await response.json()
     const translatedText = data.data.translations[0].translatedText
 
-    return NextResponse.json({ translatedText })
+    let pronounciation = ''
+    let arabic_txt = text
+    if (targetLang === 'ar') {
+      arabic_txt = translatedText
+    }
+
+    const translation_url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ar&tl=en&dt=rm&q=${encodeURIComponent(arabic_txt)}`;
+    const res = await fetch(translation_url);
+    const translation_data = await res.json();
+    pronounciation = translation_data[0][0][3];
+
+
+    return NextResponse.json({ translatedText, pronounciation })
   } catch (error) {
     console.error('Translation error:', error)
     return NextResponse.json(

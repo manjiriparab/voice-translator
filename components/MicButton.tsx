@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+
 interface MicButtonProps {
   isListening: boolean
   isDisabled: boolean
@@ -17,6 +19,8 @@ export function MicButton({
   label,
   color,
 }: MicButtonProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
   const colors = {
     blue: {
       base: '#1a6fd4',
@@ -34,9 +38,46 @@ export function MicButton({
 
   const c = colors[color]
 
+  // Attach touch events with { passive: false } to allow preventDefault
+  useEffect(() => {
+    const btn = buttonRef.current
+    if (!btn) return
+
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault()  // prevents long-press popup & text selection
+      e.stopPropagation()
+      if (!isDisabled) onStart()
+    }
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      onStop()
+    }
+
+    btn.addEventListener('touchstart', handleTouchStart, { passive: false })
+    btn.addEventListener('touchend', handleTouchEnd, { passive: false })
+    btn.addEventListener('touchcancel', handleTouchEnd, { passive: false })
+
+    return () => {
+      btn.removeEventListener('touchstart', handleTouchStart)
+      btn.removeEventListener('touchend', handleTouchEnd)
+      btn.removeEventListener('touchcancel', handleTouchEnd)
+    }
+  }, [isDisabled, onStart, onStop])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-      <p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: '#666', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+      <p style={{
+        margin: 0,
+        fontSize: '14px',
+        fontWeight: 500,
+        color: '#666',
+        letterSpacing: '0.05em',
+        textTransform: 'uppercase',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+      }}>
         {label}
       </p>
 
@@ -64,10 +105,9 @@ export function MicButton({
         )}
 
         <button
+          ref={buttonRef}
           onMouseDown={onStart}
           onMouseUp={onStop}
-          onTouchStart={(e) => { e.preventDefault(); onStart() }}
-          onTouchEnd={(e) => { e.preventDefault(); onStop() }}
           disabled={isDisabled}
           style={{
             position: 'relative',
@@ -85,7 +125,11 @@ export function MicButton({
             transition: 'all 0.2s ease',
             boxShadow: isListening ? `0 4px 20px ${c.pulse}` : '0 2px 8px rgba(0,0,0,0.1)',
             opacity: isDisabled ? 0.5 : 1,
-          }}
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            // Disable long press callout on iOS
+            WebkitTouchCallout: 'none',
+          } as React.CSSProperties}
         >
           🎤
         </button>
@@ -97,8 +141,10 @@ export function MicButton({
         color: isListening ? c.base : '#999',
         fontWeight: isListening ? 600 : 400,
         transition: 'all 0.2s',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
       }}>
-        {isListening ? 'Listening...' : 'Hold to speak'}
+        {isListening ? 'Listening...' : 'Tap to speak'}
       </p>
     </div>
   )

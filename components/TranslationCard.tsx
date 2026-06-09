@@ -7,6 +7,7 @@ interface TranslationCardProps {
   translatedText: string
   isTranslating: boolean
   direction: 'ltr' | 'rtl'
+  pronounciation?: string
 }
 
 export function TranslationCard({
@@ -16,6 +17,7 @@ export function TranslationCard({
   translatedText,
   isTranslating,
   direction,
+  pronounciation,
 }: TranslationCardProps) {
   return (
     <div style={{
@@ -62,6 +64,18 @@ export function TranslationCard({
           }}>
             {originalText}
           </p>
+          {language === 'Arabic' && pronounciation && (
+            <p style={{
+              margin: '6px 0 0',
+              fontSize: '13px',
+              color: '#888',
+              fontStyle: 'italic',
+              direction,
+              textAlign: 'right',
+            }}>
+              {pronounciation}
+            </p>
+          )}
         </div>
       )}
 
@@ -81,6 +95,19 @@ export function TranslationCard({
           }}>
             {translatedText}
           </p>
+
+          {(language === 'English' && pronounciation) && (
+            <p style={{
+              margin: '6px 0 0',
+              fontSize: '13px',
+              color: '#888',
+              fontStyle: 'italic',
+              direction: 'ltr',
+              textAlign: 'left',
+            }}>
+              🔤 {pronounciation}
+            </p>
+          )}
         </div>
       )}
 
