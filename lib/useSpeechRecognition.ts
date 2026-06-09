@@ -2,6 +2,27 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
+// Web Speech API type declarations
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  lang: string
+  interimResults: boolean
+  maxAlternatives: number
+  continuous: boolean
+  start: () => void
+  stop: () => void
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  onend: (() => void) | null
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null
+}
+
 interface UseSpeechRecognitionProps {
   language: string
   onResult: (transcript: string) => void
@@ -15,21 +36,21 @@ export function useSpeechRecognition({
 }: UseSpeechRecognitionProps) {
   const [isListening, setIsListening] = useState(false)
   const [isSupported, setIsSupported] = useState(false)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
 
   useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || (window as any).webkitSpeechRecognition
-    setIsSupported(!!SpeechRecognition)
+    const SpeechRecognitionAPI =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    setIsSupported(!!SpeechRecognitionAPI)
   }, [])
 
   const startListening = useCallback(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || (window as any).webkitSpeechRecognition
+    const SpeechRecognitionAPI =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 
-    if (!SpeechRecognition) return
+    if (!SpeechRecognitionAPI) return
 
-    const recognition = new SpeechRecognition()
+    const recognition: SpeechRecognitionInstance = new SpeechRecognitionAPI()
     recognition.lang = language
     recognition.interimResults = false
     recognition.maxAlternatives = 1
