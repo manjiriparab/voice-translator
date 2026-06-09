@@ -10,9 +10,10 @@ interface TranslationState {
   original: string
   translated: string
   isTranslating: boolean
+  pronounciation: string
 }
 
-async function translateText(text: string, from: string, to: string): Promise<string> {
+async function translateText(text: string, from: string, to: string): Promise<{ translatedText: string, pronounciation: string }> {
   const res = await fetch('/api/translate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -20,7 +21,7 @@ async function translateText(text: string, from: string, to: string): Promise<st
   })
   if (!res.ok) throw new Error('Translation failed')
   const data = await res.json()
-  return data.translatedText
+  return data
 }
 
 export default function TranslatorPage() {
@@ -29,20 +30,26 @@ export default function TranslatorPage() {
   const [englishState, setEnglishState] = useState<TranslationState>({
     original: '',
     translated: '',
+    pronounciation: '',
     isTranslating: false,
   })
   const [arabicState, setArabicState] = useState<TranslationState>({
     original: '',
     translated: '',
+    pronounciation: '',
     isTranslating: false,
   })
 
+  const [showFooter, setShowFooter] = useState(false)
+
   const handleEnglishResult = useCallback(async (transcript: string) => {
     setEnglishState((prev) => ({ ...prev, original: transcript, isTranslating: true }))
-    setArabicState({ original: '', translated: '', isTranslating: false })
+    setArabicState({ original: '', translated: '', isTranslating: false, pronounciation: '', })
     try {
-      const translated = await translateText(transcript, 'en', 'ar')
-      setEnglishState((prev) => ({ ...prev, translated, isTranslating: false }))
+      const translated_response = await translateText(transcript, 'en', 'ar')
+      const translated = translated_response.translatedText
+      const pronounciation = translated_response.pronounciation
+      setEnglishState((prev) => ({ ...prev, translated, pronounciation, isTranslating: false }))
       speak(translated, 'ar-SA')
     } catch {
       setEnglishState((prev) => ({ ...prev, translated: 'Translation error', isTranslating: false }))
@@ -51,10 +58,14 @@ export default function TranslatorPage() {
 
   const handleArabicResult = useCallback(async (transcript: string) => {
     setArabicState((prev) => ({ ...prev, original: transcript, isTranslating: true }))
-    setEnglishState({ original: '', translated: '', isTranslating: false })
+    setEnglishState({ original: '', translated: '', isTranslating: false, pronounciation: '', })
     try {
-      const translated = await translateText(transcript, 'ar', 'en')
-      setArabicState((prev) => ({ ...prev, translated, isTranslating: false }))
+
+      const translated_response = await translateText(transcript, 'ar', 'en')
+      const translated = translated_response.translatedText
+      const pronounciation = translated_response.pronounciation
+
+      setArabicState((prev) => ({ ...prev, translated, pronounciation, isTranslating: false }))
       speak(translated, 'en-US')
     } catch {
       setArabicState((prev) => ({ ...prev, translated: 'Translation error', isTranslating: false }))
@@ -118,6 +129,7 @@ export default function TranslatorPage() {
             flag="🇺🇸"
             originalText={englishState.original}
             translatedText={englishState.translated}
+            pronounciation={englishState.pronounciation}
             isTranslating={englishState.isTranslating}
             direction="ltr"
           />
@@ -126,6 +138,7 @@ export default function TranslatorPage() {
             flag="🇸🇦"
             originalText={arabicState.original}
             translatedText={arabicState.translated}
+            pronounciation={arabicState.pronounciation}
             isTranslating={arabicState.isTranslating}
             direction="rtl"
           />
@@ -175,9 +188,31 @@ export default function TranslatorPage() {
         )}
 
         {/* Footer note */}
-        <p style={{ textAlign: 'center', marginTop: '32px', fontSize: '13px', color: '#bbb' }}>
-          Powered by Google Translate API · Web Speech API
-        </p>
+        <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '13px', color: '#bbb' }}>
+          {/* Footer */}
+          {showFooter && <footer style={{ textAlign: 'center', marginTop: '48px', paddingBottom: '32px' }}>
+            <p style={{ margin: 0, fontSize: '14px', color: '#aaa' }}>
+              Made with <span style={{ color: '#e74c3c' }}>♥</span> by{' '}
+              <span style={{
+                fontFamily: "'Dancing Script', 'Brush Script MT', cursive",
+                fontSize: '22px',
+                color: '#444',
+                fontWeight: 700,
+                letterSpacing: '0.02em',
+              }}>
+                Manjiri Parab
+              </span>
+            </p>
+          </footer>}
+
+          {!showFooter && <div
+            onClick={() => setShowFooter(!showFooter)}
+            style={{ cursor: 'pointer', userSelect: 'none' }}
+          >
+            <span style={{ fontSize: '28px' }}>🌸</span>
+          </div>}
+
+        </div>
       </div>
     </main>
   )

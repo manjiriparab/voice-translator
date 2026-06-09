@@ -12,7 +12,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, padding: 0 }}>{children}</body>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body style={{ margin: 0, padding: 0 }}>
+        <style>{`
+          * {
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+          }
+          button {
+            touch-action: manipulation;
+          }
+        `}</style>
+        {children}
+      </body>
     </html>
   )
 }
